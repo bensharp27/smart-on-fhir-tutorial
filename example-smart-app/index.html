@@ -1,101 +1,169 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta http-equiv='X-UA-Compatible' content='IE=edge' />
-    <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
-    <title>Example-SMART-App</title>
-
-    <link rel='stylesheet' type='text/css' href='./src/css/example-smart-app.css'>
-    <!--
-      Temporarily disable cerner-smart-embeddable-lib
-      <link rel='stylesheet' type='text/css' href='./lib/css/cerner-smart-embeddable-lib-1.0.0.min.css'>
-    -->
-  </head>
-  <body>
-    <div id='errors'>
-    </div>
-    <div id="loading" class="spinner">
-      <div class="bounce1"></div>
-      <div class="bounce2"></div>
-      <div class="bounce3"></div>
-    </div>
-    <div id='holder' >
-      <h2>Example-SMART-App</h2>
-
-      <h2>Patient Resource</h2>
-      <table>
-        <tr>
-          <th>First Name:</th>
-          <td id='fname'></td>
-        </tr>
-        <tr>
-          <th>Last Name:</th>
-          <td id='lname'></td>
-        </tr>
-        <tr>
-          <th>Gender:</th>
-          <td id='gender'></td>
-        </tr>
-        <tr>
-          <th>Date of Birth:</th>
-          <td id='birthdate'></td>
-        </tr>
-      </table>
-      <h2>Observation Resource</h2>
-      <table>
-        <tr>
-          <th>Height:</th>
-          <td id='height'></td>
-        </tr>
-        <tr>
-          <th>Systolic Blood Pressure:</th>
-          <td id='systolicbp'></td>
-
-        </tr>
-        <tr>
-          <th>Diastolic Blood Pressure:</th>
-          <td id='diastolicbp'></td>
-        </tr>
-        <tr>
-          <th>LDL:</th>
-          <td id='ldl'></td>
-        </tr>
-        <tr>
-          <th>HDL:</th>
-          <td id='hdl'></td>
-        </tr>
-      </table>
-    </div>
-    <!-- Required JS files to enable this page to embed within an MPage -->
-    <!--
-      Temporarily disable cerner-smart-embeddable-lib
-      <script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.min.js'></script>
-      <script src='./lib/js/cerner-smart-embeddable-lib-1.0.0.min.js'></script>
-    -->
-
-    <!-- Application-level javascript-->
-    <script src='./src/js/example-smart-app.js'></script>
-
-    <!-- FHIR Client JS Library -->
-    <script src='./lib/js/fhir-client-v0.1.12.js'></script>
-
-    <!-- Prevent session bleed caused by single threaded embedded browser and sessionStorage API -->
-    <!-- https://github.com/cerner/fhir-client-cerner-additions -->
-    <script src='./lib/js/fhir-client-cerner-additions-1.0.0.js'></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script>
-      extractData().then(
-        //Display Patient Demographics and Observations if extractData was success
-        function(p) {
-          drawVisualization(p);
-        },
-
-        //Display 'Failed to call FHIR Service' if extractData failed
-        function() {
-          $('#loading').hide();
-          $('#errors').html('<p> Failed to call FHIR Service </p>');
-        }
-      );
-    </script>
-  </body>
-</html>
+<!DOCTYPE html> 
+2 <html lang="en" hidden> 
+3 	<head> 
+4 	<meta http-equiv='X-UA-Compatible' content='IE=edge' /> 
+5 	<meta http-equiv='Content-Type' content='text/html; charset=utf-8' /> 
+6 	<title>Example-SMART-App</title> 
+7 	<style type="text/css"> 
+8 		.dataTable {width:100%;table-layout:fixed;border-collapse:collapse;} 
+9 		.dataTable td {box-sizing:border-box;border-bottom:1px solid #000;width:100%;}	 
+10 		.dataDiv {width:100%;margin-bottom:6px;border:1px solid #000;} 
+11 		 
+12 		.chld-mo-demobar {margin:0 0 6px 0;padding:0;} 
+13 		.chld-mo-demobar li{display:inline-block;margin:2px 10px 2px 0;} 
+14 		.chld-mo-demobar li:nth-of-type(1) {margin-right:30px;font-size:1.1em;font-weight:bold;} 
+15 		.chld-mo-demobar dt,.chld-mo-demobar dd {white-space:nowrap;margin:0;} 
+16 		.chld-mo-demobar li dt {display:inline;width:30%;padding-right:6px;} 
+17 		.chld-mo-demobar li dt.demo-data {display:none;} 
+18 		.chld-mo-demobar dd {width:70%;display:inline;} 
+19 		.chld-mo-demobar li:nth-last-of-type(1) dd {font-weight:bold;} 
+20 	</style> 
+21 	<link rel='stylesheet' type='text/css' href='./src/css/example-smart-app.css'> 
+22 	<link rel='stylesheet' type='text/css' href='./lib/css/cerner-smart-embeddable-lib-1.0.0.min.css'> 
+23 	</head> 
+24 	<body> 
+25 		<div id="demoBar"> 
+26 			<ul class='chld-mo-demobar'> 
+27 				<li><dt class='demo-data'>Name:</dt><dd id='demo-name'>&nbsp;</dd></li> 
+28 				<li><dt class='demo-data'>Gender:</dt><dd id='demo-gender'>&nbsp;</dd></li> 
+29 				<li><dt class='demo-data'>DOB:</dt><dd id='demo-dob'>&nbsp;</dd></li> 
+30 				<li><dt class='demo-data'>Age:</dt><dd id='demo-age'>&nbsp;</dd></li> 
+31 				<li><dt>MRN:</dt><dd id='demo-mrn'>&nbsp;</dd></li> 
+32 				<li><dt>FIN:</dt><dd id='demo-fin'>&nbsp;</dd></li> 
+33 				<li><dt>Location:</dt><dd id='demo-loc'>&nbsp;</dd></li> 
+34 				<li><dt>Visit Reason:</dt><dd id='demo-rfv'>&nbsp;</dd></li> 
+35 			</ul> 
+36 		</div> 
+37 		<div id="medStatementDiv" class="dataDiv">Loading meds...</div> 
+38 		<div id="allergyDiv" class="dataDiv">Loading allergies...</div> 
+39 		<div id="obvDiv" class="dataDiv">Loading observations...</div> 
+40 	</body> 
+41 	<!-- Required JS files to enable this page to embed within an MPage --> 
+42 	<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.min.js'></script> 
+43 	<script src='./lib/js/cerner-smart-embeddable-lib-1.0.0.min.js'></script> 
+44 
+ 
+45 	<!-- Application-level javascript--> 
+46 	<script src='./src/js/example-smart-app.js'></script> 
+47 
+ 
+48 	<!-- FHIR Client JS Library --> 
+49 	<script src='./lib/js/fhir-client-v0.1.12.js'></script> 
+50 
+ 
+51 	<!-- Prevent session bleed caused by single threaded embedded browser and sessionStorage API --> 
+52 	<!-- https://github.com/cerner/fhir-client-cerner-additions --> 
+53 	<script src='./lib/js/fhir-client-cerner-additions-1.0.0.js'></script> 
+54 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> 
+55 	<script> 
+56 	/** 
+57 	*	Guide to formatting: 
+58 	*	%MM => month w/ zero placeholder					%M => month w/o zero placeholder 
+59 	*	%B => month full string								%b => month 3 letter string 
+60 	*	%dd => day w/ zero placeholder						%d => day w/o zero placeholder 
+61 	*	%yyyy => 4 digit year								%yy => 2 digit year 
+62 	*	%HH => 24 hour-based hours w/ zero placeholder		%H => 24 hour-based hours w/o zero placeholder 
+63 	*	%hh => 12 hour-based hours w/ zero placeholder		%h => 12 hour-based hours w/o zero placeholder 
+64 	*	%mm => minutes w/ zero placeholder					%m => minutes w/o zero placeholder 
+65 	*	%ss => seconds w/ zero placeholder					%s => seconds w/o zero placeholder	 
+66 	*	%P => AM/PM											%p => am/pm 
+67 	*	%F => day full string								%f => day 3 letter string 
+68 	*/ 
+69 	Date.prototype.formatString = function( formatStr ) { 
+70 		var shortdatetime = "%MM/%dd/%yy %HH:%mm",  
+71 			shortdate = "%MM/%dd/%yy", 
+72 			longdatetime = "%MM/%dd/%yyyy %HH:%mm", 
+73 			longdate = "%MM/%dd/%yyyy"; 
+74 		 
+75 		var ret_str = formatStr; 
+76 		switch (ret_str) 
+77 		{ 
+78 			case "shortdatetime": 
+79 				ret_str = shortdatetime; 
+80 				break; 
+81 			case "shortdate": 
+82 				ret_str = shortdate; 
+83 				break; 
+84 			case "longdatetime": 
+85 				ret_str = longdatetime; 
+86 				break; 
+87 			case "longdate": 
+88 				ret_str = longdate; 
+89 				break; 
+90 			default: 
+91 				break; 
+92 		}; 
+93 		var SHORT_DAY = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]; 
+94 		var LONG_DAY = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]; 
+95 		var SHORT_MONTH = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; 
+96 		var LONG_MONTH = ["January","February","March","April","May","June","July","August","September","October","November","December"]; 
+97 		var monStr=((this.getMonth()+1)<10)?"0"+(this.getMonth()+1):""+(this.getMonth()+1); 
+98 		var dateStr = (this.getDate()<10)?"0"+this.getDate():""+this.getDate(); 
+99 		var yearStr = (this.getFullYear()+"").slice(2); 
+100 		var shortHours = (this.getHours()>=1 && this.getHours()<=12)?this.getHours():(this.getHours()%12); 
+101 		shortHours = (shortHours==0)?12:shortHours; 
+102 		var hourStr = (shortHours<10)?"0"+shortHours:""+shortHours; 
+103 		var HourStr = (this.getHours()<10)?"0"+this.getHours():""+this.getHours(); 
+104 		var minuteStr = (this.getMinutes()<10)?"0"+this.getMinutes():""+this.getMinutes(); 
+105 		var secStr = (this.getSeconds()<10)?"0"+this.getSeconds():""+this.getSeconds(); 
+106 		var amPM = (this.getHours()>=12)?"pm":"am"; 
+107 		var retVal = ret_str.replace(/%MM/,monStr).replace(/%M/,(this.getMonth()+1)).replace(/%dd/,dateStr).replace(/%d/,this.getDate()).replace(/%yyyy/,this.getFullYear()).replace(/%yy/,yearStr).replace(/%HH/,HourStr).replace(/%H/,this.getHours()).replace(/%hh/,hourStr).replace(/%h/,shortHours).replace(/%mm/,minuteStr).replace(/%m/,this.getMinutes()).replace(/%ss/,secStr).replace(/%s/,this.getSeconds()).replace(/%p/,amPM).replace(/%P/,amPM.toUpperCase()).replace(/%b/,SHORT_MONTH[this.getMonth()]).replace(/%B/,LONG_MONTH[this.getMonth()]).replace(/%F/,LONG_DAY[this.getDay()]).replace(/%f/,SHORT_DAY[this.getDay()]); 
+108 		return (isNaN(this.getTime()))?"Invalid Date":retVal; 
+109 	}; 
+110 	function ready(smart) { 
+111 		if (typeof smart.patient === "object") { 
+112 			console.log(smart); 
+113 			var patientApi = smart.patient.api; 
+114 			//var encounterId = smart.encounter.id; 
+115 			 
+116 			patientApi.fetchAll({ 
+117                type: 'Observation', 
+118                query: { 
+119                               category: { 
+120                                              $or: ["laboratory","vital-signs"] 
+121                               }, 
+122                               code: { 
+123                                              $or: ['http://loinc.org|29463-7', 'http://loinc.org|8302-2', 'http://loinc.org|8462-4', 
+124                                              'http://loinc.org|8480-6', 'http://loinc.org|2085-9', 
+125                                              'http://loinc.org|2089-1', 'http://loinc.org|55284-4'] 
+126                               } 
+127                              
+128                		} 
+129 		}).then(function(response) { 
+130                	 
+131 				var tblStart = "<table style='width:100%'>" 
+132 				var tblEnd = "</table>" 
+133 				var tblHeader = "<tr><th>Name</th><th>Value</th><th>Date</th></tr>" 
+134 				var tblBody = "" 
+135 				$.each(response, function(index, value){ 
+136 					var rowStart = "<tr>" 
+137 					var rowEnd = "</tr>" 
+138 					var name = "<td>" + value.code.text +"</td>"; 
+139 					var valueQ =""; 
+140 					var datev = "<td>" + value.effectiveDateTime +"</td>"; 
+141 					if(value.valueQuantity !== undefined){ 
+142 						valueQ = "<td>" + value.valueQuantity.value +"</td>" 
+143 					}else{ 
+144 						valueQ = "<td>" + "" +"</td>" 
+145 					} 
+146 					 
+147 					tblBody+= rowStart + name+valueQ+datev + rowEnd; 
+148 				}); 
+149  
+150 				 
+151 				$("#obvDiv").append(tblStart+tblHeader+tblBody+tblEnd) 
+152 				 
+153 	}); 
+154  
+155 			 
+156 			 
+157 		} 
+158 	} 
+159 	function notReady(response) { 
+160 		if (window.location.href.indexOf('error') < 0) { 
+161 			document.body.innerText = "Launch first."; 
+162 		} 
+163 	} 
+164 	FHIR.oauth2.ready(ready, notReady); 
+165 	</script> 
+166 </html>
